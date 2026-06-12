@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stepstone Dashboard – Tatenwerk</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+    .header {
+      background: linear-gradient(135deg, #003f5c, #0c6291);
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-title { font-size: 17px; font-weight: 700; letter-spacing: -0.2px; }
+    .header-sub { font-size: 12px; opacity: 0.75; margin-top: 3px; }
+    .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .fetch-hint {
+      font-size: 11px;
+      opacity: 0.65;
+      background: rgba(255,255,255,0.12);
+      border-radius: 5px;
+      padding: 4px 10px;
+    }
+
+    .container { padding: 18px 20px; max-width: 860px; margin: 0 auto; }
+
+    .cards-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .card-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #999; margin-bottom: 6px; }
+    .card-value { font-size: 26px; font-weight: 800; color: #003f5c; line-height: 1; }
+    .card-sub { font-size: 11px; color: #aaa; margin-top: 5px; }
+
+    .section { background: white; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 16px; }
+    .section-title { font-size: 13px; font-weight: 700; color: #444; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+
+    /* Timeline */
+    .timeline { display: flex; gap: 6px; }
+    .m-chip { flex: 1; text-align: center; padding: 8px 4px; border-radius: 7px; font-size: 12px; font-weight: 700; }
+    .m-past   { background: #e8f4fd; color: #0078d4; }
+    .m-now    { background: #003f5c; color: white; }
+    .m-future { background: #f0f2f5; color: #c0c0c0; }
+    .m-label  { font-size: 10px; font-weight: 500; margin-top: 3px; opacity: 0.7; }
+
+    /* Progress */
+    .progress-bg { background: #e8ecf0; border-radius: 8px; height: 13px; overflow: hidden; margin-bottom: 6px; }
+    .progress-fill { height: 100%; border-radius: 8px; transition: width 0.4s ease, background 0.4s ease; }
+    .progress-labels { display: flex; justify-content: space-between; font-size: 11px; color: #999; }
+
+    /* Buttons */
+    .credit-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .btn { border: none; padding: 7px 13px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; transition: filter 0.15s; }
+    .btn:hover { filter: brightness(0.93); }
+    .btn-renewal { background: #dbeafe; color: #1d4ed8; }
+    .btn-new     { background: #dcfce7; color: #15803d; }
+    .btn-undo    { background: #fff7ed; color: #c2410c; }
+    .btn-reset   { background: #fee2e2; color: #b91c1c; }
+    .btn-set     { background: #f1f5f9; color: #334155; }
+
+    .manual-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+    .manual-row input { width: 72px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+    .manual-hint { font-size: 11px; color: #bbb; }
+
+    /* Log */
+    .log-list { max-height: 150px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 8px; }
+    .log-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 11px; font-size: 12px; border-bottom: 1px solid #f5f5f5; }
+    .log-item:last-child { border-bottom: none; }
+    .log-item.renewal { border-left: 3px solid #1d4ed8; }
+    .log-item.new-job  { border-left: 3px solid #15803d; }
+    .log-time { color: #bbb; font-size: 11px; }
+
+    /* Warning */
+    .warn-box { border-radius: 8px; padding: 11px 14px; font-size: 13px; font-weight: 500; margin-bottom: 16px; display: none; }
+
+    /* Jobs */
+    .jobs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+    .live-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border-radius: 20px; background: #f0fdf4; color: #15803d; font-weight: 600; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .job-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+    .job-item:last-child { border-bottom: none; }
+    .job-num { font-size: 11px; color: #ccc; font-weight: 700; min-width: 20px; padding-top: 2px; }
+    .job-info { flex: 1; }
+    .job-title { font-size: 13px; font-weight: 600; color: #003f5c; text-decoration: none; display: block; margin-bottom: 3px; }
+    .job-title:hover { text-decoration: underline; }
+    .job-meta { display: flex; gap: 12px; font-size: 11px; color: #888; flex-wrap: wrap; }
+    .job-date { font-size: 11px; color: #bbb; white-space: nowrap; padding-top: 2px; }
+    .date-new { color: #15803d; font-weight: 600; }
+
+    .last-updated { font-size: 10px; color: #ccc; text-align: right; margin-top: 10px; }
+
+    @media (max-width: 600px) { .cards-row { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">📋 Stepstone Dashboard</div>
+    <div class="header-sub">Tatenwerk Frankfurt GmbH · Vertrag Apr – Sep 2026 · 12 Slots/Monat</div>
+  </div>
+  <div class="header-right">
+    <div class="fetch-hint">🤖 Automatisch aktualisiert via GitHub Actions</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="warn-box" id="warnBox"></div>
+
+  <!-- KPI Cards -->
+  <div class="cards-row">
+    <div class="card">
+      <div class="card-label">Aktive Stellen</div>
+      <div class="card-value" id="activeSlots">13</div>
+      <div class="card-sub">von 12 Slots/Monat</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Credits verbraucht</div>
+      <div class="card-value" id="usedCredits">0</div>
+      <div class="card-sub">von <span id="totalLabel">86</span> gesamt</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Verbleibend</div>
+      <div class="card-value" id="remainCredits" style="color:#15803d;">86</div>
+      <div class="card-sub">inkl. 20% Puffer</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Vertragsende</div>
+      <div class="card-value" style="font-size:18px;padding-top:3px;">30.09.26</div>
+      <div class="card-sub" id="daysLeft">–</div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="section">
+    <div class="section-title">📅 Vertragslaufzeit</div>
+    <div class="timeline" id="timeline"></div>
+  </div>
+
+  <!-- Credit Tracker -->
+  <div class="section">
+    <div class="section-title">🎯 Credit-Tracking</div>
+
+    <div class="progress-bg">
+      <div class="progress-fill" id="progressFill" style="width:0%;background:#22c55e;"></div>
+    </div>
+    <div class="progress-labels">
+      <span>0</span>
+      <span id="progressLabel">0 / 86 Credits verbraucht</span>
+      <span>86</span>
+    </div>
+
+    <div style="font-size:11px;color:#aaa;margin-top:6px;">
+      Basis: 72 Credits (6 Monate × 12 Slots) + 14 Credits Puffer (20%) · Verlängerung &amp; Austausch = je 1 Credit
+    </div>
+
+    <div class="credit-actions">
+      <button class="btn btn-renewal" onclick="addCredit('renewal')">↻ +1 Verlängerung</button>
+      <button class="btn btn-new"     onclick="addCredit('new')">＋ +1 Neue Stelle</button>
+      <button class="btn btn-undo"    onclick="undoCredit()">↩ Rückgängig</button>
+      <button class="btn btn-reset"   onclick="resetCredits()">✕ Reset</button>
+    </div>
+
+    <div class="manual-row">
+      <input type="number" id="manualInput" min="0" max="200" placeholder="z.B. 24">
+      <button class="btn btn-set" onclick="setManual()">Setzen</button>
+      <span class="manual-hint">Gesamtanzahl verbrauchter Credits direkt eingeben</span>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="section" id="logSection" style="display:none;">
+    <div class="section-title">📋 Credit-Protokoll</div>
+    <div class="log-list" id="creditLog"></div>
+  </div>
+
+  <!-- Live Job Listings -->
+  <div class="section">
+    <div class="jobs-header">
+      <div class="section-title" style="margin-bottom:0;">🔴 Aktive Stellenanzeigen</div>
+      <div class="live-badge"><div class="dot"></div><span id="jobCountBadge">13 Stellen aktiv</span></div>
+    </div>
+    <div id="jobsList"></div>
+    <div class="last-updated" id="lastUpdated"></div>
+  </div>
+
+</div>
+
+<script>
+  const TOTAL = 86;
+  const MONTHS = [
+    { short: 'Apr', num: 4 }, { short: 'Mai', num: 5 }, { short: 'Jun', num: 6 },
+    { short: 'Jul', num: 7 }, { short: 'Aug', num: 8 }, { short: 'Sep', num: 9 },
+  ];
+  const CONTRACT_END = new Date('2026-09-30');
+
+  // ── Embedded job data (updated by Claude on request) ──────
+  const JOBS = [
+    { title: "Manager Technical Support (m/w/d)", location: "Frankfurt am Main", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Manager-Technical-Support-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14113793-inline.html" },
+    { title: "Bilanzbuchhalter (m/w/d)", location: "Frankfurt am Main", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Bilanzbuchhalter-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14045606-inline.html" },
+    { title: "Mitarbeiter im Vertriebsinnendienst (m/w/d) – Automobilkaufmann/-frau", location: "Wiesbaden", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Mitarbeiter-im-Vertriebsinnendienst-m-w-d-Automobilkaufmann-frau-Wiesbaden-Tatenwerk-Frankfurt-GmbH--14045603-inline.html" },
+    { title: "Buchhalter (m/w/d)", location: "Frankfurt am Main", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Buchhalter-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14045609-inline.html" },
+    { title: "Senioreinkäufer (m/w/d)", location: "Frankfurt am Main", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Senioreinkaeufer-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14045614-inline.html" },
+    { title: "Finanzbuchhalter (m/w/d)", location: "Frankfurt", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Finanzbuchhalter-m-w-d-Frankfurt-Tatenwerk-Frankfurt-GmbH--14045611-inline.html" },
+    { title: "Rechtsanwaltsfachangestellte (m/w/d)", location: "Frankfurt", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Rechtsanwaltsfachangestellte-m-w-d-Frankfurt-Tatenwerk-Frankfurt-GmbH--14036196-inline.html" },
+    { title: "Anlagenbuchhalter (m/w/d)", location: "Frankfurt am Main", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Anlagenbuchhalter-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14029877-inline.html" },
+    { title: "(Key) Account Manager (m/w/d)", location: "Frankfurt am Main", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Key-Account-Manager-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14024141-inline.html" },
+    { title: "Sachbearbeiter Export Luftfracht (m/w/d)", location: "Frankfurt", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Sachbearbeiter-Export-Luftfracht-m-w-d-Frankfurt-Tatenwerk-Frankfurt-GmbH--14024139-inline.html" },
+    { title: "Projektcontroller (m/w/d)", location: "Frankfurt", date: "vor 2 Wochen", url: "https://www.stepstone.de/stellenangebote--Projektcontroller-m-w-d-Frankfurt-Tatenwerk-Frankfurt-GmbH--14021580-inline.html" },
+  ];
+  const DATA_TS = "12.06.2026 via Chrome Extension"
+
+  // ── Storage ───────────────────────────────────────────────
+  function getState() {
+    try { const s = localStorage.getItem('tw_stepstone'); return s ? JSON.parse(s) : { used: 0, log: [] }; }
+    catch { return { used: 0, log: [] }; }
+  }
+  function saveState(s) { localStorage.setItem('tw_stepstone', JSON.stringify(s)); }
+
+  // ── Credit actions ────────────────────────────────────────
+  function addCredit(type) {
+    const s = getState(); s.used = Math.min(s.used + 1, 200);
+    s.log.unshift({ type, label: type === 'renewal' ? 'Verlängerung' : 'Neue Stelle', ts: Date.now() });
+    if (s.log.length > 60) s.log.pop();
+    saveState(s); render(s);
+  }
+  function undoCredit() {
+    const s = getState(); if (s.used <= 0) return; s.used--;
+    s.log.unshift({ type: 'undo', label: 'Rückgängig (−1)', ts: Date.now() });
+    saveState(s); render(s);
+  }
+  function setManual() {
+    const v = parseInt(document.getElementById('manualInput').value);
+    if (isNaN(v) || v < 0) return;
+    const s = getState(); s.used = v;
+    s.log.unshift({ type: 'manual', label: `Manuell gesetzt: ${v}`, ts: Date.now() });
+    saveState(s); render(s);
+  }
+  function resetCredits() {
+    if (!confirm('Credits wirklich zurücksetzen?')) return;
+    saveState({ used: 0, log: [] }); render({ used: 0, log: [] });
+  }
+
+  // ── Render credits ────────────────────────────────────────
+  function render(s) {
+    const used = s.used, rem = TOTAL - used;
+    const pct = Math.min(100, (used / TOTAL) * 100);
+    const color = rem <= 10 ? '#dc2626' : rem <= 20 ? '#f59e0b' : '#22c55e';
+
+    document.getElementById('usedCredits').textContent   = used;
+    document.getElementById('remainCredits').textContent = rem;
+    document.getElementById('remainCredits').style.color = color;
+    document.getElementById('progressFill').style.width  = pct + '%';
+    document.getElementById('progressFill').style.background = color;
+    document.getElementById('progressLabel').textContent = `${used} / ${TOTAL} Credits verbraucht`;
+
+    const wb = document.getElementById('warnBox');
+    if (rem <= 10) {
+      wb.style.display = 'block'; wb.style.background='#fee2e2'; wb.style.color='#b91c1c'; wb.style.border='1px solid #fca5a5';
+      wb.textContent = `⚠️ Kritisch: Nur noch ${rem} Credits verfügbar!`;
+    } else if (rem <= 20) {
+      wb.style.display = 'block'; wb.style.background='#fffbeb'; wb.style.color='#b45309'; wb.style.border='1px solid #fcd34d';
+      wb.textContent = `⚡ Nur noch ${rem} Credits verbleibend.`;
+    } else wb.style.display = 'none';
+
+    const ls = document.getElementById('logSection'), ll = document.getElementById('creditLog');
+    if (s.log && s.log.length > 0) {
+      ls.style.display = 'block';
+      ll.innerHTML = s.log.map(e => {
+        const d = new Date(e.ts);
+        const t = d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+        const cls = e.type==='renewal'?'renewal':e.type==='new'?'new-job':'';
+        return `<div class="log-item ${cls}"><span>${e.label}</span><span class="log-time">${t}</span></div>`;
+      }).join('');
+    } else ls.style.display = 'none';
+  }
+
+  // ── Timeline ──────────────────────────────────────────────
+  function renderTimeline() {
+    const now = new Date(), cm = now.getMonth()+1, cy = now.getFullYear();
+    document.getElementById('timeline').innerHTML = MONTHS.map(m => {
+      const isNow = cy===2026 && cm===m.num;
+      const isPast = cy>2026 || (cy===2026 && cm>m.num);
+      const cls = isNow ? 'm-chip m-now' : isPast ? 'm-chip m-past' : 'm-chip m-future';
+      return `<div class="${cls}">${m.short}<div class="m-label">${isPast?'✓':isNow?'●':'○'}</div></div>`;
+    }).join('');
+  }
+
+  // ── Days left ─────────────────────────────────────────────
+  function renderDays() {
+    const diff = Math.ceil((CONTRACT_END - new Date()) / 86400000);
+    document.getElementById('daysLeft').textContent = diff > 0 ? `${diff} Tage noch` : 'Vertrag abgelaufen';
+  }
+
+  // ── Render jobs ───────────────────────────────────────────
+  function renderJobs() {
+    document.getElementById('activeSlots').textContent = JOBS.length;
+    document.getElementById('jobCountBadge').textContent = `${JOBS.length} Stellen aktiv`;
+    document.getElementById('jobsList').innerHTML = JOBS.map((j, i) => {
+      const isNew = j.date.includes('Tag');
+      return `<div class="job-item">
+        <div class="job-num">${String(i+1).padStart(2,'0')}</div>
+        <div class="job-info">
+          <a class="job-title" href="${j.url}" target="_blank">${j.title}</a>
+          <div class="job-meta"><span>📍 ${j.location}</span></div>
+        </div>
+        <div class="job-date ${isNew?'date-new':''}">${j.date}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('lastUpdated').textContent = `Datenstand: ${DATA_TS} · Automatisch aktualisiert Mo–Fr um 07:30 Uhr`;
+  }
+
+  // ── Init ──────────────────────────────────────────────────
+  renderTimeline();
+  renderDays();
+  render(getState());
+  renderJobs();
+</script>
+</body>
+</html>
