@@ -1,36 +1,29 @@
 """
-Stepstone Dashboard Scraper
-============================
-Läuft täglich via GitHub Actions. Scraped die aktiven Stellenanzeigen
-und schreibt sie in index.html.
+Stepstone Dashboard Scraper (ohne Login)
+=========================================
+Läuft täglich via GitHub Actions.
+Öffnet die öffentliche Stepstone-Unternehmensseite mit Playwright
+(vollständiges JS-Rendering) und aktualisiert index.html.
 
-Benötigte GitHub Secrets:
-  STEPSTONE_EMAIL    – Stepstone E-Mail-Adresse
-  STEPSTONE_PASSWORD – Stepstone Passwort
+Keine GitHub Secrets erforderlich.
 """
 
 import json
-import os
 import re
 import sys
 import time
 from datetime import datetime
 
 
-def scrape_jobs(email: str, password: str) -> list[dict]:
+def scrape_jobs() -> list[dict]:
     from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
     JOBS_URL = "https://www.stepstone.de/cmp/de/tatenwerk-frankfurt-gmbh-89389/jobs"
-    LOGIN_URL = "https://www.stepstone.de/candidate/#/login"
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=True,
-            args=[
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-blink-features=AutomationControlled",
-            ]
+            args=["--no-sandbox", "--disable-dev-shm-usage"]
         )
         ctx = browser.new_context(
             user_agent=(
@@ -40,28 +33,19 @@ def scrape_jobs(email: str, password: str) -> list[dict]:
             ),
             viewport={"width": 1280, "height": 900},
             locale="de-DE",
-            # Automation-Fingerprint verstecken
-            extra_http_headers={"Accept-Language": "de-DE,de;q=0.9"}
         )
-
-        # navigator.webdriver auf undefined setzen
-        ctx.add_init_script("""
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-        """)
-
         page = ctx.new_page()
 
-        # ── 1. Login-Seite aufrufen ───────────────────────────
-        print("→ Öffne Login-Seite …")
-        page.goto(LOGIN_URL, wait_until="networkidle", timeout=30000)
+        # ── Seite laden ───────────────────────────────────────
+        print(f"→ Lade {JOBS_URL} …")
+        page.goto(JOBS_URL, wait_until="networkidle", timeout=30000)
         time.sleep(3)
 
-        # Cookie-Banner schließen
+        # Cookie-Banner schließen (falls vorhanden)
         for sel in [
             '#onetrust-accept-btn-handler',
             'button[id*="accept"]',
             'button[data-testid*="accept"]',
-            '[aria-label*="Accept"]',
         ]:
             try:
                 page.click(sel, timeout=3000)
@@ -71,70 +55,14 @@ def scrape_jobs(email: str, password: str) -> list[dict]:
             except PlaywrightTimeout:
                 pass
 
-        # Aktuelle URL und Seiteninhalt loggen (hilft beim Debuggen)
-        print(f"  URL nach Login-Aufruf: {page.url}")
-
-        # ── 2. Login-Formular ausfüllen ───────────────────────
-        # Alle möglichen Selektoren für das E-Mail-Feld
-        email_selectors = [
-            'input[type="email"]',
-            'input[name="email"]',
-            'input[id*="email"]',
-            'input[autocomplete="email"]',
-            'input[autocomplete="username"]',
-            'input[placeholder*="E-Mail"]',
-            'input[placeholder*="email"]',
-            'input[placeholder*="Email"]',
-        ]
-
-        email_found = False
-        for sel in email_selectors:
-            try:
-                page.wait_for_selector(sel, timeout=5000, state="visible")
-                page.fill(sel, email)
-                print(f"  E-Mail-Feld gefunden: {sel}")
-                email_found = True
-                break
-            except PlaywrightTimeout:
-                continue
-
-        if not email_found:
-            # Seiten-HTML für Debugging ausgeben
-            html_snippet = page.content()[:2000]
-            print(f"  FEHLER: Kein E-Mail-Feld gefunden. Seiten-Anfang:\n{html_snippet}")
-            raise RuntimeError("Login-Formular nicht gefunden. Stepstone hat möglicherweise das Layout geändert.")
-
-        time.sleep(0.5)
-
-        # Passwort
-        page.fill('input[type="password"]', password)
-        time.sleep(0.5)
-
-        # Absenden
-        page.click('button[type="submit"]')
-        page.wait_for_load_state("networkidle", timeout=25000)
-        time.sleep(3)
-
-        print(f"  URL nach Login: {page.url}")
-
-        if "/login" in page.url or "/signin" in page.url:
-            raise RuntimeError(
-                "Login fehlgeschlagen – nach Submit noch auf Login-Seite. "
-                "Bitte E-Mail/Passwort in GitHub Secrets prüfen."
-            )
-
-        # ── 3. Jobs-Seite aufrufen ────────────────────────────
-        print(f"→ Lade Jobs-Seite …")
-        page.goto(JOBS_URL, wait_until="networkidle", timeout=30000)
-        time.sleep(4)
-
-        # Warten auf Job-Karten
+        # Warten bis Job-Karten geladen sind
         try:
             page.wait_for_selector("article", timeout=15000)
+            print("  Job-Karten gefunden.")
         except PlaywrightTimeout:
-            print("  Warnung: Keine <article>-Elemente – versuche es trotzdem …")
+            print("  Warnung: Keine <article>-Elemente sichtbar.")
 
-        # ── 4. Jobs extrahieren ───────────────────────────────
+        # ── Jobs extrahieren ──────────────────────────────────
         print("→ Extrahiere Jobs …")
         jobs = page.evaluate("""
             () => [...document.querySelectorAll('article')].map(a => {
@@ -153,9 +81,12 @@ def scrape_jobs(email: str, password: str) -> list[dict]:
             }).filter(j => j.title && j.url)
         """)
 
+        # Anzahl der Artikel auf der Seite (zum Debugging)
+        total_articles = page.evaluate("() => document.querySelectorAll('article').length")
+        print(f"  Artikel auf Seite gesamt: {total_articles}, davon mit Stellentitel: {len(jobs)}")
+
         browser.close()
 
-    print(f"  {len(jobs)} Stelle(n) gefunden.")
     return jobs
 
 
@@ -170,23 +101,16 @@ def update_dashboard(jobs: list[dict], html_path: str = "index.html") -> None:
     html, n2 = re.subn(r'const DATA_TS = ".*?"', f'const DATA_TS = "{ts}"', html)
 
     if n1 == 0 or n2 == 0:
-        raise RuntimeError(f"Regex-Ersetzen fehlgeschlagen (JOBS: {n1}, DATA_TS: {n2}).")
+        raise RuntimeError(f"Regex fehlgeschlagen (JOBS: {n1}, DATA_TS: {n2}).")
 
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html)
 
-    print(f"✅ {len(jobs)} Stellen gespeichert – Stand: {ts}")
+    print(f"✅ index.html aktualisiert – {len(jobs)} Stellen, Stand: {ts}")
 
 
 if __name__ == "__main__":
-    email    = os.environ.get("STEPSTONE_EMAIL")
-    password = os.environ.get("STEPSTONE_PASSWORD")
-
-    if not email or not password:
-        print("❌ STEPSTONE_EMAIL und/oder STEPSTONE_PASSWORD fehlen.")
-        sys.exit(1)
-
-    jobs = scrape_jobs(email, password)
+    jobs = scrape_jobs()
 
     if not jobs:
         print("⚠️  Keine Jobs gefunden – index.html bleibt unverändert.")
