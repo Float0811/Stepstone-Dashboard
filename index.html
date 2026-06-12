@@ -213,19 +213,74 @@
 
   // ── Embedded job data (updated by Claude on request) ──────
   const JOBS = [
-    { title: "Manager Technical Support (m/w/d)", location: "Frankfurt am Main", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Manager-Technical-Support-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14113793-inline.html" },
-    { title: "Bilanzbuchhalter (m/w/d)", location: "Frankfurt am Main", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Bilanzbuchhalter-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14045606-inline.html" },
-    { title: "Mitarbeiter im Vertriebsinnendienst (m/w/d) – Automobilkaufmann/-frau", location: "Wiesbaden", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Mitarbeiter-im-Vertriebsinnendienst-m-w-d-Automobilkaufmann-frau-Wiesbaden-Tatenwerk-Frankfurt-GmbH--14045603-inline.html" },
-    { title: "Buchhalter (m/w/d)", location: "Frankfurt am Main", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Buchhalter-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14045609-inline.html" },
-    { title: "Senioreinkäufer (m/w/d)", location: "Frankfurt am Main", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Senioreinkaeufer-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14045614-inline.html" },
-    { title: "Finanzbuchhalter (m/w/d)", location: "Frankfurt", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Finanzbuchhalter-m-w-d-Frankfurt-Tatenwerk-Frankfurt-GmbH--14045611-inline.html" },
-    { title: "Rechtsanwaltsfachangestellte (m/w/d)", location: "Frankfurt", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Rechtsanwaltsfachangestellte-m-w-d-Frankfurt-Tatenwerk-Frankfurt-GmbH--14036196-inline.html" },
-    { title: "Anlagenbuchhalter (m/w/d)", location: "Frankfurt am Main", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Anlagenbuchhalter-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14029877-inline.html" },
-    { title: "(Key) Account Manager (m/w/d)", location: "Frankfurt am Main", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Key-Account-Manager-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14024141-inline.html" },
-    { title: "Sachbearbeiter Export Luftfracht (m/w/d)", location: "Frankfurt", date: "vor 1 Woche", url: "https://www.stepstone.de/stellenangebote--Sachbearbeiter-Export-Luftfracht-m-w-d-Frankfurt-Tatenwerk-Frankfurt-GmbH--14024139-inline.html" },
-    { title: "Projektcontroller (m/w/d)", location: "Frankfurt", date: "vor 2 Wochen", url: "https://www.stepstone.de/stellenangebote--Projektcontroller-m-w-d-Frankfurt-Tatenwerk-Frankfurt-GmbH--14021580-inline.html" },
-  ];
-  const DATA_TS = "12.06.2026 via Chrome Extension"
+  {
+    "title": "Manager Technical Support (m/w/d)",
+    "url": "https://www.stepstone.de/stellenangebote--Manager-Technical-Support-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14113793-inline.html",
+    "location": "Frankfurt am Main",
+    "date": "vor 1 Woche"
+  },
+  {
+    "title": "Bilanzbuchhalter (m/w/d)",
+    "url": "https://www.stepstone.de/stellenangebote--Bilanzbuchhalter-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14045606-inline.html",
+    "location": "Frankfurt am Main",
+    "date": "vor 1 Woche"
+  },
+  {
+    "title": "Mitarbeiter im Vertriebsinnendienst (m/w/d) – Automobilkaufmann/-frau",
+    "url": "https://www.stepstone.de/stellenangebote--Mitarbeiter-im-Vertriebsinnendienst-m-w-d-Automobilkaufmann-frau-Wiesbaden-Tatenwerk-Frankfurt-GmbH--14045603-inline.html",
+    "location": "Wiesbaden",
+    "date": "vor 1 Woche"
+  },
+  {
+    "title": "Buchhalter (m/w/d)",
+    "url": "https://www.stepstone.de/stellenangebote--Buchhalter-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14045609-inline.html",
+    "location": "Frankfurt am Main",
+    "date": "vor 1 Woche"
+  },
+  {
+    "title": "Senioreinkäufer (m/w/d)",
+    "url": "https://www.stepstone.de/stellenangebote--Senioreinkaeufer-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14045614-inline.html",
+    "location": "Frankfurt am Main",
+    "date": "vor 1 Woche"
+  },
+  {
+    "title": "Finanzbuchhalter (m/w/d)",
+    "url": "https://www.stepstone.de/stellenangebote--Finanzbuchhalter-m-w-d-Frankfurt-Tatenwerk-Frankfurt-GmbH--14045611-inline.html",
+    "location": "Frankfurt",
+    "date": "vor 1 Woche"
+  },
+  {
+    "title": "Rechtsanwaltsfachangestellte (m/w/d)",
+    "url": "https://www.stepstone.de/stellenangebote--Rechtsanwaltsfachangestellte-m-w-d-Frankfurt-Tatenwerk-Frankfurt-GmbH--14036196-inline.html",
+    "location": "Frankfurt",
+    "date": "vor 1 Woche"
+  },
+  {
+    "title": "Anlagenbuchhalter (m/w/d)",
+    "url": "https://www.stepstone.de/stellenangebote--Anlagenbuchhalter-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14029877-inline.html",
+    "location": "Frankfurt am Main",
+    "date": "vor 1 Woche"
+  },
+  {
+    "title": "(Key) Account Manager (m/w/d)",
+    "url": "https://www.stepstone.de/stellenangebote--Key-Account-Manager-m-w-d-Frankfurt-am-Main-Tatenwerk-Frankfurt-GmbH--14024141-inline.html",
+    "location": "Frankfurt am Main",
+    "date": "vor 1 Woche"
+  },
+  {
+    "title": "Sachbearbeiter Export Luftfracht (m/w/d)",
+    "url": "https://www.stepstone.de/stellenangebote--Sachbearbeiter-Export-Luftfracht-m-w-d-Frankfurt-Tatenwerk-Frankfurt-GmbH--14024139-inline.html",
+    "location": "Frankfurt",
+    "date": "vor 1 Woche"
+  },
+  {
+    "title": "Projektcontroller (m/w/d)",
+    "url": "https://www.stepstone.de/stellenangebote--Projektcontroller-m-w-d-Frankfurt-Tatenwerk-Frankfurt-GmbH--14021580-inline.html",
+    "location": "Frankfurt",
+    "date": "vor 2 Wochen"
+  }
+];
+  const DATA_TS = "12.06.2026 11:38 (GitHub Actions)"
 
   // ── Storage ───────────────────────────────────────────────
   function getState() {
