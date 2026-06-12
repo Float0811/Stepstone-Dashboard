@@ -38,8 +38,8 @@ def scrape_jobs() -> list[dict]:
 
         # ── Seite laden ───────────────────────────────────────
         print(f"→ Lade {JOBS_URL} …")
-        page.goto(JOBS_URL, wait_until="networkidle", timeout=30000)
-        time.sleep(3)
+        page.goto(JOBS_URL, wait_until="domcontentloaded", timeout=30000)
+        time.sleep(5)
 
         # Cookie-Banner schließen (falls vorhanden)
         for sel in [
