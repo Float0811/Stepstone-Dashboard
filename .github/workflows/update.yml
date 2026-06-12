@@ -19,9 +19,6 @@ jobs:
           pip install playwright
           playwright install chromium --with-deps
       - name: Dashboard aktualisieren
-        env:
-          STEPSTONE_EMAIL: ${{ secrets.STEPSTONE_EMAIL }}
-          STEPSTONE_PASSWORD: ${{ secrets.STEPSTONE_PASSWORD }}
         run: python scraper.py
       - name: Änderungen pushen
         run: |
